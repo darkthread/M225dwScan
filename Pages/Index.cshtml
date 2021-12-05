@@ -1,0 +1,115 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<div>
+    <div id="app">
+        <div class="mb-3">
+            <label for="mode" class="form-label">色彩模式</label>
+            <select class="form-control" id="mode" v-model="mode">
+                <option v-for="m in modeOptions" :value="m">{{m}}</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="resolution" class="form-label">解析度</label>
+            <select class="form-control" id="resolution" v-model="resolution">
+                <option v-for="m in resolutionOptions" :value="m">{{m}}</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="source" class="form-label">來源</label>
+            <select class="form-control" id="source" v-model="source">
+                <option v-for="m in sourceOptions" :value="m">{{m}}</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="size" class="form-label">尺寸</label>
+            <select class="form-control" id="size" v-model="size">
+                <option v-for="m in sizeOptions" :value="m">{{m}}</option>
+            </select>
+        </div>
+        <div v-show="size=='Custom'">
+            <label class="form-label">自訂尺寸</label>
+            <div>
+                上邊界 <input type="number" v-model="top" />
+                左邊界 <input type="number" v-model="left" />
+                寬度 <input type="number" v-model="width" />
+                高度 <input type="number" v-model="height" />
+            </div>
+        </div>
+        <div class="mb-3">
+            <button class="btn btn-primary btn-lg" @@click="scan()">
+                掃描
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    var paperSizes = {
+        'A4': '210x297',
+        'Letter': '216x279',
+        'B5': '176x250',
+        'A5': '148x210',
+        'Custom': '?'
+    };
+    const storeKey = 'M225dwScanSettings';
+    var storedSettings = JSON.parse(localStorage.getItem(storeKey) || '{ "mode": "24bit Color[Fast]", "resolution": "150", "source": "FlatBed", "size": "A5", "top": 0, "left": 0, "width": 210, "height": 297 }');
+    var ap = Vue.createApp({
+        data() {
+            return {
+                modeOptions: 'Black & White|Gray[Error Diffusion]|True Gray|24bit Color[Fast]'.split('|'),
+                mode: storedSettings.mode,
+                resolutionOptions: '100|150|200|300|400|600'.split('|'),
+                resolution: storedSettings.resolution,
+                sourceOptions: 'FlatBed|Automatic Document Feeder(left aligned)|Automatic Document Feeder(centrally aligned)'.split('|'),
+                source: storedSettings.source,
+                brightness: '0',
+                constract: '0',
+                sizeOptions: Object.keys(paperSizes),
+                size: storedSettings.size,
+                top: storedSettings.top,
+                left: storedSettings.left,
+                width: storedSettings.width,
+                height: storedSettings.height
+            }
+        },
+        watch: {
+            size: {
+                handler: function (nv) {
+                    if (nv === 'Custom') return;
+                    let s = paperSizes[nv].split('x');
+                    this.width = parseInt(s[0]);
+                    this.height = parseInt(s[1]);
+                },
+                immediate: true
+            }
+        },
+        methods: {
+            scan: function () {
+                location.href = '/Scan?mode=' + encodeURIComponent(this.mode) +
+                    '&source=' + encodeURIComponent(this.source) +
+                    '&resolution=' + this.resolution +
+                    '&top=' + this.top +
+                    '&left=' + this.left +
+                    '&width=' + this.width +
+                    '&height=' + this.height +
+                    '&_=' + Math.random();
+                localStorage.setItem(storeKey, JSON.stringify({
+                    mode: this.mode,
+                    resolution: this.resolution,
+                    source: this.source,
+                    size: this.size,
+                    top: this.top,
+                    left: this.left,
+                    width: this.width,
+                    height: this.height
+                }));
+            }
+        }
+    }).mount('#app');
+</script>
+}
